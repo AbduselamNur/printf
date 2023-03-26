@@ -1,66 +1,75 @@
 #include "main.h"
 
-void print_buffer(char buffer[], int *buff_ind);
 
 /**
- * _printf - Printf function
- * @format: format.
- * Return: Printed chars.
+ * _printf - Parameters for printf
+ * @format: list of arguments
+ * Return: Printed thing
  */
+
 int _printf(const char *format, ...)
 {
-	int i, printed = 0, printed_chars = 0;
-	int flags, width, precision, size, buff_ind = 0;
+	int chars;
 	va_list list;
-	char buffer[BUFF_SIZE];
 
+	va_start(list, format);
 	if (format == NULL)
 		return (-1);
 
-	va_start(list, format);
-
-	for (i = 0; format && format[i] != '\0'; i++)
-	{
-		if (format[i] != '%')
-		{
-			buffer[buff_ind++] = format[i];
-			if (buff_ind == BUFF_SIZE)
-				print_buffer(buffer, &buff_ind);
-			/* write(1, &format[i], 1);*/
-			printed_chars++;
-		}
-		else
-		{
-			print_buffer(buffer, &buff_ind);
-			flags = get_flags(format, &i);
-			width = get_width(format, &i, list);
-			precision = get_precision(format, &i, list);
-			size = get_size(format, &i);
-			++i;
-			printed = handle_print(format, &i, list, buffer,
-				flags, width, precision, size);
-			if (printed == -1)
-				return (-1);
-			printed_chars += printed;
-		}
-	}
-
-	print_buffer(buffer, &buff_ind);
+	chars = charsFormats(format, list);
 
 	va_end(list);
-
-	return (printed_chars);
+	return (chars);
 }
 
 /**
- * print_buffer - Prints the contents of the buffer if it exist
- * @buffer: Array of chars
- * @buff_ind: Index at which to add next char, represents the length.
+ * charsFormats - paremters printf
+ * @format: list of arguments
+ * @args: listing
+ * Return: value of print
  */
-void print_buffer(char buffer[], int *buff_ind)
-{
-	if (*buff_ind > 0)
-		write(1, &buffer[0], *buff_ind);
 
-	*buff_ind = 0;
+int charsFormats(const char *format, va_list args)
+{
+	int a, b, chars, r_val;
+
+	fmtsSpefier f_list[] = {{"c", _char}, {"s", _string},
+				{"%", _percent}, {"d", _integer}, {"i", _integer}, {NULL, NULL}
+	};
+	chars = 0;
+	for (a = 0; format[a] != '\0'; a++)
+	{
+		if (format[a] == '%')
+		{
+			for (b = 0; f_list[b].sym != NULL; b++)
+			{
+				if (format[a + 1] == f_list[b].sym[0])
+				{
+					r_val = f_list[b].f(args);
+					if (r_val == -1)
+						return (-1);
+					chars += r_val;
+					break;
+				}
+			}
+			if (f_list[b].sym == NULL && format[a + 1] != ' ')
+			{
+				if (format[a + 1] != '\0')
+				{
+					_putchar(format[a]);
+					_putchar(format[a + 1]);
+					chars = chars + 2;
+}
+				else
+					return (-1);
+			}
+		a += 1;
+		}
+		else
+		{
+			_putchar(format[a]);
+			chars++;
+		}
+	}
+	return (chars);
 }
